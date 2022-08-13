@@ -22,7 +22,7 @@ export const Album = ({route}) => {
       first: number,
       assetType: 'Photos',
       groupName: route.params?.type,
-      // groupTypes: 'boAt',
+      groupTypes: 'boAt',
     })
       .then(r => {
         setPhoto(r.edges);
@@ -52,7 +52,7 @@ export const Album = ({route}) => {
         renderItem={({item, index, separators}) => (
           <TouchableOpacity
             onPress={() =>
-              nav.navigate('ImageView', {image: item.node.image.uri})
+              nav.navigate('ImageView', {imageList: photo, index: index})
             }
             style={{
               borderRadius: 10,

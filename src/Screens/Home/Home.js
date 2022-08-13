@@ -9,6 +9,7 @@ import {
   PermissionsAndroid,
 } from 'react-native';
 import React from 'react';
+import CameraRollPicker from '@kebetoo/camera-roll-picker';
 
 import CameraRoll from '@react-native-community/cameraroll';
 import {useNavigation} from '@react-navigation/native';
@@ -28,43 +29,44 @@ export const Home = () => {
   const [album, setAlbum] = React.useState([]);
 
   const nav = useNavigation();
-
+  const GetAlbumPhoto = AlBumName =>
+    CameraRoll.getPhotos({
+      assetType: 'Photos',
+      groupTypes: 'All',
+      groupName: AlBumName,
+      first: 1,
+    }).then(response => {
+      return response.edges[0];
+    });
   React.useEffect(() => {
     hasAndroidPermission().then(res => {
       if (res) {
         handleButtonPress();
       }
     });
-    console.log(photo);
   }, []);
 
   const handleButtonPress = () => {
-    CameraRoll.getAlbums().then(r => {
-      // console.log(r);
-      setAlbum(r);
-    });
-
-    CameraRoll.getPhotos({
-      first: 20,
+    setPhoto([]);
+    CameraRoll.getAlbums({
       assetType: 'Photos',
-      groupName: 'boAt',
-      // groupTypes: 'boAt',
-    })
-      .then(r => {
-        // r.edges.map(i => {
-        //   console.log(i.node);
-        // });
-        setPhoto(r.edges);
-      })
-      .catch(err => {
-        //Error Loading Images
-        console.log(err);
-      });
-  };
+    }).then(r => {
+      setAlbum(r);
+      setPhoto([]);
 
+      r.map(albumData => {
+        const Datatoget = GetAlbumPhoto(albumData.title);
+        setPhoto([]);
+
+        Datatoget.then(data => {
+          setPhoto(photo => [...photo, data.node.image.uri]);
+        });
+      });
+    });
+  };
   return (
     <View style={{backgroundColor: '#161616', flex: 1}}>
-      {/* <Button title="Load Images" onPress={handleButtonPress} /> */}
+      {/* <CameraRollPicker selectSingleItem={true} groupName="boAt" /> */}
       <ScrollView>
         {album.map((p, i) => {
           return (
@@ -80,6 +82,7 @@ export const Home = () => {
                   margin: 10,
                   borderRadius: 10,
                 }}
+                source={{uri: photo[i]}}
               />
               <View style={{flexDirection: 'column'}}>
                 <Text
