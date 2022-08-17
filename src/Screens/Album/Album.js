@@ -9,6 +9,7 @@ import {
   PermissionsAndroid,
   FlatList,
 } from 'react-native';
+import ImageLayout from 'react-native-image-layout';
 
 import CameraRoll from '@react-native-community/cameraroll';
 import {useNavigation} from '@react-navigation/native';
@@ -17,15 +18,19 @@ let page = 50;
 export const Album = ({route}) => {
   const [photo, setPhoto] = useState([]);
   const nav = useNavigation();
-  const getImageAlbum = (number = page) => {
+  const getImageAlbum = async (number = page) => {
     CameraRoll.getPhotos({
       first: number,
       assetType: 'Photos',
       groupName: route.params?.type,
-      groupTypes: 'boAt',
+      groupTypes: 'All',
     })
-      .then(r => {
-        setPhoto(r.edges);
+      .then(async r => {
+        let newJson = await r.edges.map(i => {
+          return {uri: i.node.image.uri};
+        });
+
+        setPhoto(newJson);
       })
       .catch(err => {
         //Error Loading Images
@@ -37,14 +42,22 @@ export const Album = ({route}) => {
   }, []);
 
   return (
-    <View
-      style={{
-        backgroundColor: '#161616',
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}>
-      <FlatList
+    <View style={{backgroundColor: '#161616', flex: 1}}>
+      {photo.length > 0 && (
+        <ImageLayout
+          imageContainerStyle={{
+            backgroundColor: 'black',
+            flex: 1,
+            borderRadius: 10,
+          }}
+          images={photo}
+          spacing={5}
+          columns={3}
+          masonryFlatListColProps={styles.test}
+        />
+      )}
+
+      {/* <FlatList
         data={photo}
         numColumns={4}
         keyExtractor={(item, index) => index}
@@ -77,9 +90,13 @@ export const Album = ({route}) => {
             />
           </TouchableOpacity>
         )}
-      />
+      /> */}
     </View>
   );
 };
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  test: {
+    backgroundColor: '#161616',
+  },
+});

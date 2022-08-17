@@ -1,76 +1,64 @@
 import {
+  ScrollView,
   StyleSheet,
   Text,
-  View,
-  Button,
-  Image,
   TouchableOpacity,
-  ScrollView,
-  PermissionsAndroid,
+  View,
+  Image,
 } from 'react-native';
-import React from 'react';
-
-import CameraRoll from '@react-native-community/cameraroll';
+import React, {useState, useEffect} from 'react';
+import Icon from 'react-native-vector-icons/AntDesign';
 import {useNavigation} from '@react-navigation/native';
-export const Home = () => {
-  async function hasAndroidPermission() {
-    const permission = PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE;
+import CameraRoll from '@react-native-community/cameraroll';
+import ImageView from 'react-native-image-viewing';
 
-    const hasPermission = await PermissionsAndroid.check(permission);
-    if (hasPermission) {
-      return true;
-    }
-
-    const status = await PermissionsAndroid.request(permission);
-    return status === 'granted';
-  }
-  const [photo, setPhoto] = React.useState([]);
-  const [album, setAlbum] = React.useState([]);
-
+export const Video = () => {
+  const [album, setAlbum] = useState([]);
   const nav = useNavigation();
+  const [photo, setPhoto] = React.useState([]);
+
   const GetAlbumPhoto = AlBumName =>
     CameraRoll.getPhotos({
-      assetType: 'Photos',
+      assetType: 'Videos',
       groupTypes: 'All',
       groupName: AlBumName,
       first: 1,
     }).then(response => {
+      console.log('====================================');
+      console.log(response.edges);
+      console.log('====================================');
       return response.edges[0];
     });
-  React.useEffect(() => {
-    hasAndroidPermission().then(res => {
-      if (res) {
-        handleButtonPress();
-      }
-    });
-  }, []);
-
-  const handleButtonPress = () => {
-    setPhoto([]);
+  const getImageAlbum = async () => {
     CameraRoll.getAlbums({
-      assetType: 'Photos',
-    }).then(r => {
-      setAlbum(r);
-      setPhoto([]);
+      assetType: 'Videos',
+    })
+      .then(async r => {
+        setAlbum(r);
+        r.map(albumData => {
+          const Datatoget = GetAlbumPhoto(albumData.title);
+          setPhoto([]);
 
-      r.map(albumData => {
-        const Datatoget = GetAlbumPhoto(albumData.title);
-        setPhoto([]);
-
-        Datatoget.then(data => {
-          setPhoto(photo => [...photo, data.node.image.uri]);
+          Datatoget.then(data => {
+            setPhoto(photo => [...photo, data.node.image.uri]);
+          });
         });
+      })
+      .catch(err => {
+        //Error Loading Images
+        console.log(err);
       });
-    });
   };
+  useEffect(() => {
+    getImageAlbum();
+  }, []);
   return (
-    <View style={{backgroundColor: '#161616', flex: 1}}>
-      {/* <CameraRollPicker selectSingleItem={true} groupName="boAt" /> */}
-      <ScrollView>
+    <View style={{flex: 1}}>
+      <ScrollView contentContainerStyle={{paddingBottom: 200}}>
         {album.map((p, i) => {
           return (
             <TouchableOpacity
-              onPress={() => nav.navigate('Album', {type: p.title})}
+              onPress={() => nav.navigate('VideoList', {type: p.title})}
               key={i}
               style={{flexDirection: 'row', alignItems: 'center'}}>
               <Image
@@ -100,4 +88,5 @@ export const Home = () => {
     </View>
   );
 };
+
 const styles = StyleSheet.create({});
